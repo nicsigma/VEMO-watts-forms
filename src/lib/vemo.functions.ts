@@ -133,6 +133,31 @@ export const createSubmission = createServerFn({ method: "POST" })
         .single());
     }
 
+    // Legacy compatibility: some projects don't have the latest columns/checks yet.
+    // Fall back to the closest supported payload so participants can still continue the flow.
+    if (error && /watts_mail|empresa|current_exercise|last_screen_at|tipo_vehiculo|uso_principal/.test(String(error.message))) {
+      const fallbackVehicle = data.tipoVehiculo === "own_ev_credit" ? "own_ev" : data.tipoVehiculo;
+      ({ data: submission, error } = await supabaseAdmin
+        .from("test_submissions")
+        .insert({
+          alias: normalizedAlias,
+          edad_rango: data.edadRango,
+          tipo_vehiculo: fallbackVehicle,
+          uso_principal: data.usoPrincipal,
+          frecuencia_carga: data.frecuenciaCarga,
+          meses_en_vemo: data.mesesEnVemo,
+          ciudad: data.ciudad?.trim() || null,
+          link_source: data.linkSource?.trim() || null,
+          segmento: segment,
+          status: "started",
+          session_label: "Activation Fee - B2C",
+          focus_group: "no_moderado",
+          exercise_code: "ticket_ab",
+        } as any)
+        .select("*")
+        .single());
+    }
+
     if (error) {
       throw new Error("No se pudo iniciar el ejercicio.");
     }

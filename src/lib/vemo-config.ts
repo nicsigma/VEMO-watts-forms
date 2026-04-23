@@ -16,6 +16,7 @@ export const APP_NAME = "Vemo Research Hub";
 export const PARTICIPANT_STORAGE_KEY = "vemo-participant-profile";
 
 export const AGE_OPTIONS = ["18–25", "26–35", "36–45", "46–55", "56+"] as const;
+export const CITY_OPTIONS = ["CDMX", "Monterrey"] as const;
 export const VEHICLE_OPTIONS = [
   { value: "own_ev_credit", label: "Propio pero pagando un crédito" },
   { value: "leased_ev", label: "Alquilado" },
@@ -28,16 +29,16 @@ export const PRIMARY_USE_OPTIONS = [
 ] as const;
 export const CHARGING_FREQUENCY_OPTIONS = [
   { value: "first_time", label: "Primera vez" },
-  { value: "1_2_month", label: "1–2 veces/mes" },
-  { value: "1_2_week", label: "1–2 veces/semana" },
+  { value: "1_2_month", label: "Mas o menos 1 a 2 veces al mes" },
+  { value: "1_2_week", label: "Mas o menos 1 a 2 veces por semana" },
   { value: "daily", label: "Diaria" },
   { value: "never_vemo", label: "Nunca cargué en Vemo" },
 ] as const;
 export const VEMO_MONTH_OPTIONS = [
-  { value: "lt_3", label: "<3 meses" },
-  { value: "3_6", label: "3–6 meses" },
-  { value: "6_12", label: "6–12 meses" },
-  { value: "gt_12", label: ">12 meses" },
+  { value: "lt_3", label: "Menos de 3 meses" },
+  { value: "3_6", label: "Entre 3 y 6 meses" },
+  { value: "6_12", label: "Entre 6 y 12 meses" },
+  { value: "gt_12", label: "Mas de 12 meses" },
   { value: "never", label: "Nunca" },
 ] as const;
 

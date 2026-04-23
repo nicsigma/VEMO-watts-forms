@@ -17,6 +17,7 @@ import {
   BASE_PRICE_PER_KWH,
   CARD_SORT_ITEMS,
   CHARGING_FREQUENCY_OPTIONS,
+  CITY_OPTIONS,
   EXERCISE_LABELS,
   FLOW_EXERCISES,
   HUB_ADDONS,
@@ -43,6 +44,18 @@ export const Route = createFileRoute("/")({
 });
 
 type AppStage = "welcome" | "profile" | "consent" | "exercise_intro" | "exercise" | "transition" | "final" | "thanks";
+type ParticipantProfileDraft = {
+  alias: string;
+  wattsMail: string;
+  edadRango: (typeof AGE_OPTIONS)[number] | "";
+  tipoVehiculo: (typeof VEHICLE_OPTIONS)[number]["value"] | "";
+  empresa: string;
+  usoPrincipal: (typeof PRIMARY_USE_OPTIONS)[number]["value"] | "";
+  frecuenciaCarga: (typeof CHARGING_FREQUENCY_OPTIONS)[number]["value"] | "";
+  mesesEnVemo: (typeof VEMO_MONTH_OPTIONS)[number]["value"] | "";
+  ciudad: string;
+  linkSource: string;
+};
 
 function IndexPage() {
   const createSubmissionFn = useServerFn(createSubmission);
@@ -59,15 +72,15 @@ function IndexPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const [profile, setProfile] = useState<ParticipantProfileInput>({
+  const [profile, setProfile] = useState<ParticipantProfileDraft>({
     alias: "",
     wattsMail: "",
-    edadRango: AGE_OPTIONS[0],
-    tipoVehiculo: VEHICLE_OPTIONS[0].value,
+    edadRango: "",
+    tipoVehiculo: "",
     empresa: "",
-    usoPrincipal: PRIMARY_USE_OPTIONS[0].value,
-    frecuenciaCarga: CHARGING_FREQUENCY_OPTIONS[0].value,
-    mesesEnVemo: VEMO_MONTH_OPTIONS[0].value,
+    usoPrincipal: "",
+    frecuenciaCarga: "",
+    mesesEnVemo: "",
     ciudad: "",
     linkSource: "",
   });
@@ -127,6 +140,17 @@ function IndexPage() {
   };
 
   const createSession = async () => {
+    const requiredErrors: Record<string, string> = {};
+    if (!profile.edadRango) requiredErrors.edadRango = "Selecciona una opcion.";
+    if (!profile.tipoVehiculo) requiredErrors.tipoVehiculo = "Selecciona una opcion.";
+    if (!profile.usoPrincipal) requiredErrors.usoPrincipal = "Selecciona una opcion.";
+    if (!profile.frecuenciaCarga) requiredErrors.frecuenciaCarga = "Selecciona una opcion.";
+    if (!profile.mesesEnVemo) requiredErrors.mesesEnVemo = "Selecciona una opcion.";
+    if (Object.keys(requiredErrors).length > 0) {
+      setFieldErrors(requiredErrors);
+      setErrorMessage("Revisa los campos marcados.");
+      return;
+    }
     const parsed = participantProfileSchema.safeParse(profile);
     if (!parsed.success) {
       const nextErrors: Record<string, string> = {};
@@ -142,7 +166,7 @@ function IndexPage() {
     setErrorMessage(null);
     setFieldErrors({});
     try {
-      const result = await createSubmissionFn({ data: parsed.data });
+      const result = await createSubmissionFn({ data: parsed.data as ParticipantProfileInput });
       setSubmissionId(result.submissionId);
       setStage("consent");
     } catch (error) {
@@ -283,7 +307,7 @@ function IndexPage() {
 
   return (
     <main className="vemo-shell">
-      <div className="vemo-stack">
+      <div className="vemo-stack space-y-1">
         {stage !== "welcome" && stage !== "profile" && stage !== "consent" && stage !== "final" && stage !== "thanks" ? (
           <Card className="vemo-card">
             <CardContent className="space-y-2 pt-6">
@@ -302,21 +326,20 @@ function IndexPage() {
           <Card className="vemo-card">
             <CardHeader>
               <LogoVemo />
-              <Badge className="w-fit rounded-full bg-primary text-primary-foreground">Solo 10-15 min</Badge>
-              <CardTitle className="text-3xl leading-tight">Tu opinión vale y te premia</CardTitle>
+              <CardTitle className="pt-1 text-3xl leading-tight">Tu opinion vale y te premia</CardTitle>
               <CardDescription>
-                Ayudanos a diseñar una mejor experiencia de carga para conductores de apps como vos.
+                Ayudanos a disenar una mejor experiencia de carga para personas conductoras de apps como tu.
               </CardDescription>
               <div className="rounded-2xl border border-accent/40 bg-gradient-to-br from-accent/35 to-accent/15 px-4 py-4 text-base text-accent-foreground">
                 <p className="mb-1 text-xs font-semibold uppercase tracking-[0.14em] opacity-80">Incentivo por participar</p>
                 <p>
-                  Completá los 4 ejercicios y te acreditamos <strong>$100 MXN en carga</strong> en tu billetera.
+                  Completa los 4 ejercicios y te acreditamos <strong>$100 MXN en carga</strong> en tu billetera.
                 </p>
               </div>
-              <div className="grid gap-2 text-sm text-card-foreground/90">
+              <div className="grid gap-3 py-1 text-sm text-card-foreground/90">
                 <p className="flex items-center gap-2">
                   <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">1</span>
-                  Respondés desde el celu, sin vueltas.
+                  Respondes desde tu celular, sin complicaciones.
                 </p>
                 <p className="flex items-center gap-2">
                   <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">2</span>
@@ -324,11 +347,11 @@ function IndexPage() {
                 </p>
                 <p className="flex items-center gap-2">
                   <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">3</span>
-                  Tu progreso se guarda automáticamente.
+                  Tu progreso se guarda automaticamente.
                 </p>
               </div>
-              <p className="rounded-xl border border-border/70 bg-white/75 px-3 py-2 text-sm text-muted-foreground">
-                Duración total: 10-15 minutos. Podés pausar y continuar después.
+              <p className="rounded-xl border border-border/70 bg-white/90 px-3 py-3 text-base font-semibold text-primary">
+                Duracion estimada: 10 a 15 minutos.
               </p>
             </CardHeader>
             <CardContent>
@@ -356,7 +379,9 @@ function IndexPage() {
                 }}
               />
               {fieldErrors.alias ? <p className="text-xs text-destructive">{fieldErrors.alias}</p> : null}
-              <Input
+              <label className="grid gap-1.5">
+                <span className="text-sm font-semibold tracking-tight">Mail de Watts *</span>
+                <Input
                 className={fieldErrors.wattsMail ? "border-destructive" : ""}
                 placeholder="Mail de Watts"
                 type="email"
@@ -365,38 +390,38 @@ function IndexPage() {
                   setProfile((p) => ({ ...p, wattsMail: e.target.value }));
                   setFieldErrors((prev) => ({ ...prev, wattsMail: "" }));
                 }}
-              />
+                />
+              </label>
               {fieldErrors.wattsMail ? <p className="text-xs text-destructive">{fieldErrors.wattsMail}</p> : null}
-              <Input
-                className={fieldErrors.ciudad ? "border-destructive" : ""}
-                placeholder="Ciudad (opcional)"
-                value={profile.ciudad}
-                onChange={(e) => {
-                  setProfile((p) => ({ ...p, ciudad: e.target.value }));
-                  setFieldErrors((prev) => ({ ...prev, ciudad: "" }));
-                }}
-              />
+              <p className="-mt-2 text-xs text-muted-foreground">A esta cuenta se acreditaran los $100 MXN en carga.</p>
+              <SelectLine label="Ciudad" value={profile.ciudad} options={CITY_OPTIONS} placeholder="Selecciona una opcion" error={fieldErrors.ciudad} onChange={(value) => { setProfile((p) => ({ ...p, ciudad: value })); setFieldErrors((prev) => ({ ...prev, ciudad: "" })); }} />
               {fieldErrors.ciudad ? <p className="text-xs text-destructive">{fieldErrors.ciudad}</p> : null}
-              <SelectLine label="Edad" value={profile.edadRango} options={AGE_OPTIONS} error={fieldErrors.edadRango} onChange={(value) => { setProfile((p) => ({ ...p, edadRango: value })); setFieldErrors((prev) => ({ ...prev, edadRango: "" })); }} />
-              <SelectLine label="Tipo de vehículo" value={profile.tipoVehiculo} options={VEHICLE_OPTIONS.map((v) => v.value)} labels={Object.fromEntries(VEHICLE_OPTIONS.map((v) => [v.value, v.label]))} error={fieldErrors.tipoVehiculo} onChange={(value) => { setProfile((p) => ({ ...p, tipoVehiculo: value })); setFieldErrors((prev) => ({ ...prev, tipoVehiculo: "" })); }} />
+              <SelectLine required label="Edad" value={profile.edadRango} options={AGE_OPTIONS} placeholder="Selecciona una opcion" error={fieldErrors.edadRango} onChange={(value) => { setProfile((p) => ({ ...p, edadRango: value })); setFieldErrors((prev) => ({ ...prev, edadRango: "" })); }} />
+              <SelectLine required label="Tipo de vehiculo" value={profile.tipoVehiculo} options={VEHICLE_OPTIONS.map((v) => v.value)} placeholder="Selecciona una opcion" labels={Object.fromEntries(VEHICLE_OPTIONS.map((v) => [v.value, v.label]))} error={fieldErrors.tipoVehiculo} onChange={(value) => { setProfile((p) => ({ ...p, tipoVehiculo: value })); setFieldErrors((prev) => ({ ...prev, tipoVehiculo: "" })); }} />
               {(profile.tipoVehiculo === "own_ev_credit" || profile.tipoVehiculo === "leased_ev" || profile.tipoVehiculo === "fleet_ev") ? (
                 <>
-                  <Input
+                  <label className="grid gap-1.5">
+                    <span className="text-sm font-semibold tracking-tight">Empresa *</span>
+                    <Input
                     className={fieldErrors.empresa ? "border-destructive" : ""}
-                    placeholder="¿De qué empresa es?"
+                    placeholder="De que empresa es"
                     value={profile.empresa || ""}
                     onChange={(e) => {
                       setProfile((p) => ({ ...p, empresa: e.target.value }));
                       setFieldErrors((prev) => ({ ...prev, empresa: "" }));
                     }}
-                  />
+                    />
+                  </label>
                   {fieldErrors.empresa ? <p className="text-xs text-destructive">{fieldErrors.empresa}</p> : null}
                 </>
               ) : null}
-              <SelectLine label="Uso principal" value={profile.usoPrincipal} options={PRIMARY_USE_OPTIONS.map((v) => v.value)} labels={Object.fromEntries(PRIMARY_USE_OPTIONS.map((v) => [v.value, v.label]))} error={fieldErrors.usoPrincipal} onChange={(value) => { setProfile((p) => ({ ...p, usoPrincipal: value })); setFieldErrors((prev) => ({ ...prev, usoPrincipal: "" })); }} />
-              <SelectLine label="Frecuencia de carga en Vemo" value={profile.frecuenciaCarga} options={CHARGING_FREQUENCY_OPTIONS.map((v) => v.value)} labels={Object.fromEntries(CHARGING_FREQUENCY_OPTIONS.map((v) => [v.value, v.label]))} error={fieldErrors.frecuenciaCarga} onChange={(value) => { setProfile((p) => ({ ...p, frecuenciaCarga: value })); setFieldErrors((prev) => ({ ...prev, frecuenciaCarga: "" })); }} />
-              <SelectLine label="Meses usando Vemo" value={profile.mesesEnVemo} options={VEMO_MONTH_OPTIONS.map((v) => v.value)} labels={Object.fromEntries(VEMO_MONTH_OPTIONS.map((v) => [v.value, v.label]))} error={fieldErrors.mesesEnVemo} onChange={(value) => { setProfile((p) => ({ ...p, mesesEnVemo: value })); setFieldErrors((prev) => ({ ...prev, mesesEnVemo: "" })); }} />
-              <Button className="vemo-cta sm:w-auto sm:px-8" onClick={createSession} disabled={saving}>{saving ? "Guardando..." : "Continuar"}</Button>
+              <SelectLine required label="Uso principal" value={profile.usoPrincipal} options={PRIMARY_USE_OPTIONS.map((v) => v.value)} placeholder="Selecciona una opcion" labels={Object.fromEntries(PRIMARY_USE_OPTIONS.map((v) => [v.value, v.label]))} error={fieldErrors.usoPrincipal} onChange={(value) => { setProfile((p) => ({ ...p, usoPrincipal: value })); setFieldErrors((prev) => ({ ...prev, usoPrincipal: "" })); }} />
+              <SelectLine required label="Frecuencia de carga en Vemo" value={profile.frecuenciaCarga} options={CHARGING_FREQUENCY_OPTIONS.map((v) => v.value)} placeholder="Selecciona una opcion" labels={Object.fromEntries(CHARGING_FREQUENCY_OPTIONS.map((v) => [v.value, v.label]))} error={fieldErrors.frecuenciaCarga} onChange={(value) => { setProfile((p) => ({ ...p, frecuenciaCarga: value })); setFieldErrors((prev) => ({ ...prev, frecuenciaCarga: "" })); }} />
+              <SelectLine required label="Meses usando Vemo" value={profile.mesesEnVemo} options={VEMO_MONTH_OPTIONS.map((v) => v.value)} placeholder="Selecciona una opcion" labels={Object.fromEntries(VEMO_MONTH_OPTIONS.map((v) => [v.value, v.label]))} error={fieldErrors.mesesEnVemo} onChange={(value) => { setProfile((p) => ({ ...p, mesesEnVemo: value })); setFieldErrors((prev) => ({ ...prev, mesesEnVemo: "" })); }} />
+              <div className="flex gap-2">
+                <Button variant="outline" className="vemo-cta sm:w-auto sm:px-6" onClick={() => setStage("welcome")} disabled={saving}>Volver</Button>
+                <Button className="vemo-cta sm:w-auto sm:px-8" onClick={createSession} disabled={saving}>{saving ? "Guardando..." : "Continuar"}</Button>
+              </div>
             </CardContent>
           </Card>
         ) : null}
@@ -408,7 +433,10 @@ function IndexPage() {
               <p>1) No hay respuestas correctas.</p>
               <p>2) Tus respuestas se guardan solas.</p>
               <p>3) Si algo no aplica, igual contanos.</p>
-              <Button className="vemo-cta mt-2 sm:w-auto sm:px-8" onClick={() => setStage("exercise_intro")}>Arrancar con el ejercicio 1</Button>
+              <div className="mt-2 flex gap-2">
+                <Button variant="outline" className="vemo-cta sm:w-auto sm:px-6" onClick={() => setStage("profile")}>Volver</Button>
+                <Button className="vemo-cta sm:w-auto sm:px-8" onClick={() => setStage("exercise_intro")}>Arrancar con el ejercicio 1</Button>
+              </div>
             </CardContent>
           </Card>
         ) : null}
@@ -421,7 +449,10 @@ function IndexPage() {
               <p className="mb-4 text-sm text-muted-foreground">
                 Leé con calma y respondé como lo explicarías en voz alta. Si algo no aplica, igual contalo.
               </p>
-              <Button className="vemo-cta sm:w-auto sm:px-8" onClick={() => setStage("exercise")}>Comenzar</Button>
+              <div className="flex gap-2">
+                <Button variant="outline" className="vemo-cta sm:w-auto sm:px-6" onClick={() => setStage("consent")}>Volver</Button>
+                <Button className="vemo-cta sm:w-auto sm:px-8" onClick={() => setStage("exercise")}>Comenzar</Button>
+              </div>
             </CardContent>
           </Card>
         ) : null}
@@ -430,9 +461,22 @@ function IndexPage() {
           <Card className="vemo-card">
             <CardHeader><CardTitle>Ejercicio 1 · Ticket de recarga</CardTitle></CardHeader>
             <CardContent className="space-y-4">
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => {
+                  if (e1Step > 0) {
+                    setE1Step((prev) => prev - 1);
+                    return;
+                  }
+                  setStage("exercise_intro");
+                }}
+              >
+                Volver
+              </Button>
               {e1Step === 0 ? (
                 <>
-                  <img src={ticketBWithoutActivation} alt="Ticket B" className="w-full rounded-md border" />
+                  <PhoneFrameImage src={ticketBWithoutActivation} alt="Ticket B" />
                   <Textarea
                     className={fieldErrors.e1_bDesc ? "border-destructive" : ""}
                     value={e1State.bDesc}
@@ -440,14 +484,14 @@ function IndexPage() {
                       setE1State((s) => ({ ...s, bDesc: e.target.value }));
                       setFieldErrors((prev) => ({ ...prev, e1_bDesc: "" }));
                     }}
-                    placeholder="Ej: dice que pagué $58 por la energía, no veo cargos extra..."
+                    placeholder=""
                   />
                   {fieldErrors.e1_bDesc ? <p className="text-xs text-destructive">{fieldErrors.e1_bDesc}</p> : null}
                 </>
               ) : null}
               {e1Step === 1 ? (
                 <>
-                  <img src={ticketAWithActivation} alt="Ticket A" className="w-full rounded-md border" />
+                  <PhoneFrameImage src={ticketAWithActivation} alt="Ticket A" />
                   <Textarea
                     className={fieldErrors.e1_aDesc ? "border-destructive" : ""}
                     value={e1State.aDesc}
@@ -455,7 +499,7 @@ function IndexPage() {
                       setE1State((s) => ({ ...s, aDesc: e.target.value }));
                       setFieldErrors((prev) => ({ ...prev, e1_aDesc: "" }));
                     }}
-                    placeholder="Ej: veo un cargo de activación separado..."
+                    placeholder=""
                   />
                   {fieldErrors.e1_aDesc ? <p className="text-xs text-destructive">{fieldErrors.e1_aDesc}</p> : null}
                 </>
@@ -468,20 +512,20 @@ function IndexPage() {
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="rounded-md border p-2">
                       <p className="mb-2 text-xs font-semibold text-muted-foreground">Opción A</p>
-                      <img src={ticketAWithActivation} alt="Ticket A" className="w-full rounded-md border" />
+                      <PhoneFrameImage src={ticketAWithActivation} alt="Ticket A" />
                     </div>
                     <div className="rounded-md border p-2">
                       <p className="mb-2 text-xs font-semibold text-muted-foreground">Opción B</p>
-                      <img src={ticketBWithoutActivation} alt="Ticket B" className="w-full rounded-md border" />
+                      <PhoneFrameImage src={ticketBWithoutActivation} alt="Ticket B" />
                     </div>
                   </div>
-                  <RadioLine label="¿Cuál te parece más claro?" value={e1State.clearer} options={["A", "B"]} error={fieldErrors.e1_clearer} onChange={(v) => { setE1State((s) => ({ ...s, clearer: v as "A" | "B" })); setFieldErrors((prev) => ({ ...prev, e1_clearer: "" })); }} />
-                  <RadioLine label="¿Cuál te parece más justo?" value={e1State.fairer} options={["A", "B"]} error={fieldErrors.e1_fairer} onChange={(v) => { setE1State((s) => ({ ...s, fairer: v as "A" | "B" })); setFieldErrors((prev) => ({ ...prev, e1_fairer: "" })); }} />
-                  <RadioLine label="¿Cuál preferís para pagar?" value={e1State.pay} options={["A", "B"]} error={fieldErrors.e1_pay} onChange={(v) => { setE1State((s) => ({ ...s, pay: v as "A" | "B" })); setFieldErrors((prev) => ({ ...prev, e1_pay: "" })); }} />
-                  <Textarea className={fieldErrors.e1_compareWhy ? "border-destructive" : ""} value={e1State.compareWhy} onChange={(e) => { setE1State((s) => ({ ...s, compareWhy: e.target.value })); setFieldErrors((prev) => ({ ...prev, e1_compareWhy: "" })); }} placeholder="Contanos por qué..." />
+                  <RadioLine required label="¿Cuál te parece más claro?" value={e1State.clearer} options={["A", "B"]} error={fieldErrors.e1_clearer} onChange={(v) => { setE1State((s) => ({ ...s, clearer: v as "A" | "B" })); setFieldErrors((prev) => ({ ...prev, e1_clearer: "" })); }} />
+                  <RadioLine required label="¿Cuál te parece más justo?" value={e1State.fairer} options={["A", "B"]} error={fieldErrors.e1_fairer} onChange={(v) => { setE1State((s) => ({ ...s, fairer: v as "A" | "B" })); setFieldErrors((prev) => ({ ...prev, e1_fairer: "" })); }} />
+                  <RadioLine required label="¿Cuál preferís para pagar?" value={e1State.pay} options={["A", "B"]} error={fieldErrors.e1_pay} onChange={(v) => { setE1State((s) => ({ ...s, pay: v as "A" | "B" })); setFieldErrors((prev) => ({ ...prev, e1_pay: "" })); }} />
+                  <Textarea className={fieldErrors.e1_compareWhy ? "border-destructive" : ""} value={e1State.compareWhy} onChange={(e) => { setE1State((s) => ({ ...s, compareWhy: e.target.value })); setFieldErrors((prev) => ({ ...prev, e1_compareWhy: "" })); }} placeholder="" />
                   {fieldErrors.e1_compareWhy ? <p className="text-xs text-destructive">{fieldErrors.e1_compareWhy}</p> : null}
-                  <RadioLine label="Si Vemo te deja elegir un modelo para siempre..." value={e1State.permanent} options={["A", "B", "equal"]} labels={{ equal: "Me da lo mismo" }} error={fieldErrors.e1_permanent} onChange={(v) => { setE1State((s) => ({ ...s, permanent: v as "A" | "B" | "equal" })); setFieldErrors((prev) => ({ ...prev, e1_permanent: "" })); }} />
-                  <Textarea className={fieldErrors.e1_permanentWhy ? "border-destructive" : ""} value={e1State.permanentWhy} onChange={(e) => { setE1State((s) => ({ ...s, permanentWhy: e.target.value })); setFieldErrors((prev) => ({ ...prev, e1_permanentWhy: "" })); }} placeholder="¿Por qué?" />
+                  <RadioLine required label="Si Vemo te deja elegir un modelo para siempre..." value={e1State.permanent} options={["A", "B", "equal"]} labels={{ equal: "Me da lo mismo" }} error={fieldErrors.e1_permanent} onChange={(v) => { setE1State((s) => ({ ...s, permanent: v as "A" | "B" | "equal" })); setFieldErrors((prev) => ({ ...prev, e1_permanent: "" })); }} />
+                  <Textarea className={fieldErrors.e1_permanentWhy ? "border-destructive" : ""} value={e1State.permanentWhy} onChange={(e) => { setE1State((s) => ({ ...s, permanentWhy: e.target.value })); setFieldErrors((prev) => ({ ...prev, e1_permanentWhy: "" })); }} placeholder="" />
                   {fieldErrors.e1_permanentWhy ? <p className="text-xs text-destructive">{fieldErrors.e1_permanentWhy}</p> : null}
                 </>
               ) : null}
@@ -496,6 +540,7 @@ function IndexPage() {
           <Card className="vemo-card">
             <CardHeader><CardTitle>Ejercicio 2 · Ordenar por importancia</CardTitle></CardHeader>
             <CardContent className="space-y-4">
+              <Button variant="outline" className="w-full sm:w-auto" onClick={() => setStage("exercise_intro")}>Volver</Button>
               <p className="text-sm text-muted-foreground">Arrastrá las tarjetas: arriba lo más importante para vos.</p>
               <SortableRanking items={rankingItems} onChange={setRankingItems} />
               <ActionFooterButton onClick={saveExercise} disabled={saving}>{saving ? "Guardando..." : "Guardar orden"}</ActionFooterButton>
@@ -507,6 +552,7 @@ function IndexPage() {
           <Card className="vemo-card">
             <CardHeader><CardTitle>Ejercicio 3 · Agrupar fotos</CardTitle></CardHeader>
             <CardContent className="space-y-4">
+              <Button variant="outline" className="w-full sm:w-auto" onClick={() => setStage("exercise_intro")}>Volver</Button>
               <PhotoGroupingBoard
                 photos={PHOTO_OPTIONS}
                 groupIds={groupIds}
@@ -537,8 +583,8 @@ function IndexPage() {
                   <Textarea placeholder="¿Por qué agrupaste estas fotos?" value={groupDetails.find((item) => item.groupId === groupId)?.reason || ""} onChange={(e) => setGroupDetails((prev) => prev.map((item) => item.groupId === groupId ? { ...item, reason: e.target.value } : item))} />
                 </div>
               ))}
-              <RadioLine label="¿Cuál preferirías para cargar?" value={favoritePhotoId} options={PHOTO_OPTIONS.map((photo) => photo.id)} labels={Object.fromEntries(PHOTO_OPTIONS.map((photo) => [photo.id, photo.label]))} error={fieldErrors.photo_favorite} onChange={(v) => { setFavoritePhotoId(v); setFieldErrors((prev) => ({ ...prev, photo_favorite: "" })); }} />
-              <Textarea className={fieldErrors.photo_reason ? "border-destructive" : ""} placeholder="¿Por qué esa?" value={favoriteReason} onChange={(e) => { setFavoriteReason(e.target.value); setFieldErrors((prev) => ({ ...prev, photo_reason: "" })); }} />
+              <RadioLine required label="¿Cuál preferirías para cargar?" value={favoritePhotoId} options={PHOTO_OPTIONS.map((photo) => photo.id)} labels={Object.fromEntries(PHOTO_OPTIONS.map((photo) => [photo.id, photo.label]))} error={fieldErrors.photo_favorite} onChange={(v) => { setFavoritePhotoId(v); setFieldErrors((prev) => ({ ...prev, photo_favorite: "" })); }} />
+              <Textarea className={fieldErrors.photo_reason ? "border-destructive" : ""} placeholder="" value={favoriteReason} onChange={(e) => { setFavoriteReason(e.target.value); setFieldErrors((prev) => ({ ...prev, photo_reason: "" })); }} />
               {fieldErrors.photo_reason ? <p className="text-xs text-destructive">{fieldErrors.photo_reason}</p> : null}
               <ActionFooterButton onClick={saveExercise} disabled={saving}>{saving ? "Guardando..." : "Terminar ejercicio"}</ActionFooterButton>
             </CardContent>
@@ -549,7 +595,11 @@ function IndexPage() {
           <Card className="vemo-card">
             <CardHeader><CardTitle>Ejercicio 4 · Armá tu hub ideal</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">Tildá los extras que querés. El precio se actualiza solo.</p>
+              <Button variant="outline" className="w-full sm:w-auto" onClick={() => setStage("exercise_intro")}>Volver</Button>
+              <p className="text-sm text-muted-foreground">
+                Queremos entender mejor qué valorás del precio que pagás y qué te hace sentir que el cobro es transparente.
+                Elegí los atributos que más te importan y contanos cómo impactan en tu percepción del precio final.
+              </p>
               <div className="grid gap-2">
                 {HUB_ADDONS.map((addon) => (
                   <label key={addon.id} className="flex items-center justify-between rounded-md border p-3">
@@ -572,9 +622,9 @@ function IndexPage() {
                   <p>Diferencia: +${(finalPrice - BASE_PRICE_PER_KWH).toFixed(2)}</p>
                 </CardContent>
               </Card>
-              <RadioLine label="¿Ese precio te parece justo?" value={hubFairness} options={["si", "mas_o_menos", "no"]} labels={{ si: "Sí", mas_o_menos: "Más o menos", no: "No" }} error={fieldErrors.hub_fairness} onChange={(v) => { setHubFairness(v as "si" | "mas_o_menos" | "no"); setFieldErrors((prev) => ({ ...prev, hub_fairness: "" })); }} />
-              <RadioLine label="¿Lo usarías?" value={hubWouldUse} options={["siempre", "a_veces", "no"]} labels={{ siempre: "Sí, siempre", a_veces: "Sí, a veces", no: "No" }} error={fieldErrors.hub_wouldUse} onChange={(v) => { setHubWouldUse(v as "siempre" | "a_veces" | "no"); setFieldErrors((prev) => ({ ...prev, hub_wouldUse: "" })); }} />
-              <Textarea className={fieldErrors.hub_why ? "border-destructive" : ""} value={hubWhy} onChange={(e) => { setHubWhy(e.target.value); setFieldErrors((prev) => ({ ...prev, hub_why: "" })); }} placeholder="¿Por qué?" />
+              <RadioLine required label="¿Ese precio te parece justo?" value={hubFairness} options={["si", "mas_o_menos", "no"]} labels={{ si: "Sí", mas_o_menos: "Más o menos", no: "No" }} error={fieldErrors.hub_fairness} onChange={(v) => { setHubFairness(v as "si" | "mas_o_menos" | "no"); setFieldErrors((prev) => ({ ...prev, hub_fairness: "" })); }} />
+              <RadioLine required label="¿Lo usarías?" value={hubWouldUse} options={["siempre", "a_veces", "no"]} labels={{ siempre: "Sí, siempre", a_veces: "Sí, a veces", no: "No" }} error={fieldErrors.hub_wouldUse} onChange={(v) => { setHubWouldUse(v as "siempre" | "a_veces" | "no"); setFieldErrors((prev) => ({ ...prev, hub_wouldUse: "" })); }} />
+              <Textarea className={fieldErrors.hub_why ? "border-destructive" : ""} value={hubWhy} onChange={(e) => { setHubWhy(e.target.value); setFieldErrors((prev) => ({ ...prev, hub_why: "" })); }} placeholder="" />
               {fieldErrors.hub_why ? <p className="text-xs text-destructive">{fieldErrors.hub_why}</p> : null}
               <Input value={hubWorth} onChange={(e) => setHubWorth(e.target.value)} placeholder="Lo que sí vale la pena pagar" />
               <Input value={hubNotWorth} onChange={(e) => setHubNotWorth(e.target.value)} placeholder="Lo que no vale la pena pagar" />
@@ -624,11 +674,18 @@ function IndexPage() {
 
 function LogoVemo() {
   return (
-    <div className="mb-3 flex items-center justify-between gap-3 rounded-2xl bg-primary px-3 py-2 shadow-[0_8px_20px_rgb(2_53_44/25%)]">
+    <div className="mb-4 flex items-center gap-3 rounded-2xl bg-primary px-4 py-3 shadow-[0_8px_20px_rgb(2_53_44/25%)]">
       <img src={logoVemo} alt="Vemo" className="h-11 w-auto" />
-      <span className="rounded-full border border-white/25 bg-white/10 px-2.5 py-1 text-xs font-extrabold tracking-[0.22em] text-primary-foreground">
-        VEMO
-      </span>
+    </div>
+  );
+}
+
+function PhoneFrameImage({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div className="vemo-image-frame">
+      <div className="vemo-image-screen">
+        <img src={src} alt={alt} className="w-full rounded-2xl border border-black/10" />
+      </div>
     </div>
   );
 }
@@ -655,21 +712,26 @@ function SelectLine({
   label,
   value,
   options,
+  placeholder,
   labels,
   error,
+  required,
   onChange,
 }: {
   label: string;
   value: string;
   options: readonly string[];
+  placeholder?: string;
   labels?: Record<string, string>;
   error?: string;
+  required?: boolean;
   onChange: (value: any) => void;
 }) {
   return (
     <label className="grid gap-1.5">
-      <span className="text-sm font-semibold tracking-tight">{label}</span>
-      <select className={`vemo-input h-11 border px-3 text-sm ${error ? "border-destructive" : ""}`} value={value} onChange={(e) => onChange(e.target.value)}>
+      <span className="text-sm font-semibold tracking-tight">{label}{required ? " *" : ""}</span>
+      <select className={`vemo-input h-12 border px-3 text-sm ${error ? "border-destructive" : ""}`} value={value} onChange={(e) => onChange(e.target.value)}>
+        {placeholder ? <option value="">{placeholder}</option> : null}
         {options.map((option) => (
           <option key={option} value={option}>{labels?.[option] ?? option}</option>
         ))}
@@ -685,6 +747,7 @@ function RadioLine({
   options,
   labels,
   error,
+  required,
   onChange,
 }: {
   label: string;
@@ -692,11 +755,12 @@ function RadioLine({
   options: string[];
   labels?: Record<string, string>;
   error?: string;
+  required?: boolean;
   onChange: (value: string) => void;
 }) {
   return (
     <div className="space-y-2">
-      <p className="text-sm font-semibold tracking-tight">{label}</p>
+      <p className="text-sm font-semibold tracking-tight">{label}{required ? " *" : ""}</p>
       <div className={`flex flex-wrap gap-3 rounded-md ${error ? "ring-1 ring-destructive/40 p-2" : ""}`}>
         {options.map((option) => (
           <label key={option} className="flex items-center gap-2 rounded-xl border bg-white/80 px-3 py-2 text-sm shadow-[0_2px_8px_rgb(5_28_22/8%)]">
