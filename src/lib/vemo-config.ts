@@ -103,6 +103,9 @@ export const BASE_PRICE_PER_KWH = 7;
 export const PHOTO_PLACEHOLDER_HELPER = "Agrupa las 6 fotos reales según lo que percibas que tienen en común.";
 export const TICKET_EXPLANATION =
   "Vas a ver dos versiones del mismo ticket. El total final es idéntico; cambia solo la manera de comunicarlo.";
+/** Mensaje ético uniforme para toda la experiencia no moderada */
+export const RESEARCH_HONESTY_MESSAGE =
+  "No hay respuestas incorrectas, queremos tu verdad.";
 
 export function getSegmentFromPrimaryUse(useValue: string): SegmentCode {
   return useValue === "ride_hailing" ? "ride_hailing" : "b2c";

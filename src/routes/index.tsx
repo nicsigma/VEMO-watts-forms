@@ -18,11 +18,13 @@ import {
   CARD_SORT_ITEMS,
   CHARGING_FREQUENCY_OPTIONS,
   CITY_OPTIONS,
+  RESEARCH_HONESTY_MESSAGE,
   EXERCISE_LABELS,
   FLOW_EXERCISES,
   HUB_ADDONS,
   PHOTO_OPTIONS,
   PRIMARY_USE_OPTIONS,
+  TICKET_EXPLANATION,
   VEHICLE_OPTIONS,
   VEMO_MONTH_OPTIONS,
   shuffleItems,
@@ -343,7 +345,7 @@ function IndexPage() {
                 </p>
                 <p className="flex items-center gap-2">
                   <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">2</span>
-                  No hay respuestas correctas o incorrectas.
+                  {RESEARCH_HONESTY_MESSAGE}
                 </p>
                 <p className="flex items-center gap-2">
                   <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">3</span>
@@ -430,7 +432,7 @@ function IndexPage() {
           <Card className="vemo-card">
             <CardHeader><CardTitle>Antes de empezar</CardTitle></CardHeader>
             <CardContent className="space-y-2">
-              <p>1) No hay respuestas correctas.</p>
+              <p>1) {RESEARCH_HONESTY_MESSAGE}</p>
               <p>2) Tus respuestas se guardan solas.</p>
               <p>3) Si algo no aplica, igual contanos.</p>
               <div className="mt-2 flex gap-2">
@@ -445,7 +447,12 @@ function IndexPage() {
           <Card className="vemo-card">
             <CardHeader><CardTitle>{EXERCISE_LABELS[currentExercise]}</CardTitle></CardHeader>
             <CardContent>
-              <p className="mb-2 text-sm text-muted-foreground">No hay respuestas correctas. Queremos tu reacción real.</p>
+              <p className="mb-2 text-sm font-medium text-card-foreground">{RESEARCH_HONESTY_MESSAGE}</p>
+              {currentExercise === "ticket_ab" ? (
+                <p className="mb-3 rounded-xl border border-border/70 bg-muted/35 p-3 text-sm text-card-foreground">
+                  {TICKET_EXPLANATION}
+                </p>
+              ) : null}
               <p className="mb-4 text-sm text-muted-foreground">
                 Leé con calma y respondé como lo explicarías en voz alta. Si algo no aplica, igual contalo.
               </p>
@@ -474,34 +481,57 @@ function IndexPage() {
               >
                 Volver
               </Button>
+              <div className="rounded-xl border border-primary/30 bg-gradient-to-br from-white to-accent/15 p-4 text-sm shadow-sm">
+                <p className="font-semibold text-primary">Contexto del ejercicio</p>
+                <p className="mt-1 text-card-foreground/95">{TICKET_EXPLANATION}</p>
+                <p className="mt-2 font-medium text-card-foreground">{RESEARCH_HONESTY_MESSAGE}</p>
+              </div>
               {e1Step === 0 ? (
                 <>
                   <PhoneFrameImage src={ticketBWithoutActivation} alt="Ticket B" />
-                  <Textarea
-                    className={fieldErrors.e1_bDesc ? "border-destructive" : ""}
-                    value={e1State.bDesc}
-                    onChange={(e) => {
-                      setE1State((s) => ({ ...s, bDesc: e.target.value }));
-                      setFieldErrors((prev) => ({ ...prev, e1_bDesc: "" }));
-                    }}
-                    placeholder=""
-                  />
-                  {fieldErrors.e1_bDesc ? <p className="text-xs text-destructive">{fieldErrors.e1_bDesc}</p> : null}
+                  <div className="rounded-2xl border-2 border-primary/35 bg-white p-4 shadow-sm">
+                    <label className="mb-1 block text-sm font-semibold" htmlFor="e1-b-desc">
+                      Tu respuesta *
+                    </label>
+                    <p className="mb-2 text-xs text-muted-foreground">
+                      Describí lo que ves en este ticket y cómo lo interpretás.
+                    </p>
+                    <Textarea
+                      id="e1-b-desc"
+                      className={`min-h-[120px] ${fieldErrors.e1_bDesc ? "border-destructive" : ""}`}
+                      value={e1State.bDesc}
+                      onChange={(e) => {
+                        setE1State((s) => ({ ...s, bDesc: e.target.value }));
+                        setFieldErrors((prev) => ({ ...prev, e1_bDesc: "" }));
+                      }}
+                      placeholder=""
+                    />
+                    {fieldErrors.e1_bDesc ? <p className="mt-1 text-xs text-destructive">{fieldErrors.e1_bDesc}</p> : null}
+                  </div>
                 </>
               ) : null}
               {e1Step === 1 ? (
                 <>
                   <PhoneFrameImage src={ticketAWithActivation} alt="Ticket A" />
-                  <Textarea
-                    className={fieldErrors.e1_aDesc ? "border-destructive" : ""}
-                    value={e1State.aDesc}
-                    onChange={(e) => {
-                      setE1State((s) => ({ ...s, aDesc: e.target.value }));
-                      setFieldErrors((prev) => ({ ...prev, e1_aDesc: "" }));
-                    }}
-                    placeholder=""
-                  />
-                  {fieldErrors.e1_aDesc ? <p className="text-xs text-destructive">{fieldErrors.e1_aDesc}</p> : null}
+                  <div className="rounded-2xl border-2 border-primary/35 bg-white p-4 shadow-sm">
+                    <label className="mb-1 block text-sm font-semibold" htmlFor="e1-a-desc">
+                      Tu respuesta *
+                    </label>
+                    <p className="mb-2 text-xs text-muted-foreground">
+                      Describí lo que ves en este ticket y cómo lo interpretás.
+                    </p>
+                    <Textarea
+                      id="e1-a-desc"
+                      className={`min-h-[120px] ${fieldErrors.e1_aDesc ? "border-destructive" : ""}`}
+                      value={e1State.aDesc}
+                      onChange={(e) => {
+                        setE1State((s) => ({ ...s, aDesc: e.target.value }));
+                        setFieldErrors((prev) => ({ ...prev, e1_aDesc: "" }));
+                      }}
+                      placeholder=""
+                    />
+                    {fieldErrors.e1_aDesc ? <p className="mt-1 text-xs text-destructive">{fieldErrors.e1_aDesc}</p> : null}
+                  </div>
                 </>
               ) : null}
               {e1Step === 2 ? (
@@ -522,11 +552,45 @@ function IndexPage() {
                   <RadioLine required label="¿Cuál te parece más claro?" value={e1State.clearer} options={["A", "B"]} error={fieldErrors.e1_clearer} onChange={(v) => { setE1State((s) => ({ ...s, clearer: v as "A" | "B" })); setFieldErrors((prev) => ({ ...prev, e1_clearer: "" })); }} />
                   <RadioLine required label="¿Cuál te parece más justo?" value={e1State.fairer} options={["A", "B"]} error={fieldErrors.e1_fairer} onChange={(v) => { setE1State((s) => ({ ...s, fairer: v as "A" | "B" })); setFieldErrors((prev) => ({ ...prev, e1_fairer: "" })); }} />
                   <RadioLine required label="¿Cuál preferís para pagar?" value={e1State.pay} options={["A", "B"]} error={fieldErrors.e1_pay} onChange={(v) => { setE1State((s) => ({ ...s, pay: v as "A" | "B" })); setFieldErrors((prev) => ({ ...prev, e1_pay: "" })); }} />
-                  <Textarea className={fieldErrors.e1_compareWhy ? "border-destructive" : ""} value={e1State.compareWhy} onChange={(e) => { setE1State((s) => ({ ...s, compareWhy: e.target.value })); setFieldErrors((prev) => ({ ...prev, e1_compareWhy: "" })); }} placeholder="" />
-                  {fieldErrors.e1_compareWhy ? <p className="text-xs text-destructive">{fieldErrors.e1_compareWhy}</p> : null}
+                  <div className="rounded-2xl border-2 border-primary/35 bg-white p-4 shadow-sm">
+                    <label className="mb-1 block text-sm font-semibold" htmlFor="e1-compare-why">
+                      ¿Por qué? *
+                    </label>
+                    <p className="mb-2 text-xs text-muted-foreground">
+                      Explicá el criterio con el que comparaste A y B en las tres preguntas anteriores.
+                    </p>
+                    <Textarea
+                      id="e1-compare-why"
+                      className={`min-h-[120px] ${fieldErrors.e1_compareWhy ? "border-destructive" : ""}`}
+                      value={e1State.compareWhy}
+                      onChange={(e) => {
+                        setE1State((s) => ({ ...s, compareWhy: e.target.value }));
+                        setFieldErrors((prev) => ({ ...prev, e1_compareWhy: "" }));
+                      }}
+                      placeholder=""
+                    />
+                    {fieldErrors.e1_compareWhy ? <p className="mt-1 text-xs text-destructive">{fieldErrors.e1_compareWhy}</p> : null}
+                  </div>
                   <RadioLine required label="Si Vemo te deja elegir un modelo para siempre..." value={e1State.permanent} options={["A", "B", "equal"]} labels={{ equal: "Me da lo mismo" }} error={fieldErrors.e1_permanent} onChange={(v) => { setE1State((s) => ({ ...s, permanent: v as "A" | "B" | "equal" })); setFieldErrors((prev) => ({ ...prev, e1_permanent: "" })); }} />
-                  <Textarea className={fieldErrors.e1_permanentWhy ? "border-destructive" : ""} value={e1State.permanentWhy} onChange={(e) => { setE1State((s) => ({ ...s, permanentWhy: e.target.value })); setFieldErrors((prev) => ({ ...prev, e1_permanentWhy: "" })); }} placeholder="" />
-                  {fieldErrors.e1_permanentWhy ? <p className="text-xs text-destructive">{fieldErrors.e1_permanentWhy}</p> : null}
+                  <div className="rounded-2xl border-2 border-primary/35 bg-white p-4 shadow-sm">
+                    <label className="mb-1 block text-sm font-semibold" htmlFor="e1-permanent-why">
+                      ¿Por qué? *
+                    </label>
+                    <p className="mb-2 text-xs text-muted-foreground">
+                      Contanos por qué te quedarías con esa opción (o por qué te da lo mismo).
+                    </p>
+                    <Textarea
+                      id="e1-permanent-why"
+                      className={`min-h-[100px] ${fieldErrors.e1_permanentWhy ? "border-destructive" : ""}`}
+                      value={e1State.permanentWhy}
+                      onChange={(e) => {
+                        setE1State((s) => ({ ...s, permanentWhy: e.target.value }));
+                        setFieldErrors((prev) => ({ ...prev, e1_permanentWhy: "" }));
+                      }}
+                      placeholder=""
+                    />
+                    {fieldErrors.e1_permanentWhy ? <p className="mt-1 text-xs text-destructive">{fieldErrors.e1_permanentWhy}</p> : null}
+                  </div>
                 </>
               ) : null}
               <ActionFooterButton disabled={saving} onClick={saveExercise}>
@@ -584,8 +648,25 @@ function IndexPage() {
                 </div>
               ))}
               <RadioLine required label="¿Cuál preferirías para cargar?" value={favoritePhotoId} options={PHOTO_OPTIONS.map((photo) => photo.id)} labels={Object.fromEntries(PHOTO_OPTIONS.map((photo) => [photo.id, photo.label]))} error={fieldErrors.photo_favorite} onChange={(v) => { setFavoritePhotoId(v); setFieldErrors((prev) => ({ ...prev, photo_favorite: "" })); }} />
-              <Textarea className={fieldErrors.photo_reason ? "border-destructive" : ""} placeholder="" value={favoriteReason} onChange={(e) => { setFavoriteReason(e.target.value); setFieldErrors((prev) => ({ ...prev, photo_reason: "" })); }} />
-              {fieldErrors.photo_reason ? <p className="text-xs text-destructive">{fieldErrors.photo_reason}</p> : null}
+              <div className="rounded-2xl border-2 border-primary/35 bg-white p-4 shadow-sm">
+                <label className="mb-1 block text-sm font-semibold" htmlFor="photo-favorite-reason">
+                  ¿Por qué elegiste esa opción? *
+                </label>
+                <p className="mb-2 text-xs text-muted-foreground">
+                  Contanos qué te llevó a elegir esa foto para cargar.
+                </p>
+                <Textarea
+                  id="photo-favorite-reason"
+                  className={`min-h-[120px] ${fieldErrors.photo_reason ? "border-destructive" : ""}`}
+                  placeholder=""
+                  value={favoriteReason}
+                  onChange={(e) => {
+                    setFavoriteReason(e.target.value);
+                    setFieldErrors((prev) => ({ ...prev, photo_reason: "" }));
+                  }}
+                />
+                {fieldErrors.photo_reason ? <p className="mt-1 text-xs text-destructive">{fieldErrors.photo_reason}</p> : null}
+              </div>
               <ActionFooterButton onClick={saveExercise} disabled={saving}>{saving ? "Guardando..." : "Terminar ejercicio"}</ActionFooterButton>
             </CardContent>
           </Card>
